@@ -1,0 +1,57 @@
+- name: Check if compose has already been installed
+  ansible.builtin.shell: which docker-compose
+  register: ifpip
+  ignore_errors: true
+
+- name: install/delete pip if nessesary for Redhat
+  ansible.builtin.dnf:
+    name: "{{ pip }}"
+    state: "{{ state }}"
+  when:
+    - ifpip.rc != 0
+    - ansible_facts['os_family']|lower == 'redhat'
+
+- name: install/delete pip if nessesary for Debian
+  apt:
+    name: "{{ pip }}"
+    state: "{{ state }}"
+    update_cache: yes
+  when:
+    - ifpip.rc != 0
+    - ansible_facts['os_family']|lower == 'debian'
+  
+- name: install/delete python3 packages
+  ansible.builtin.pip:
+    name: "{{ item }}"
+    state: "{{ state }}"
+  loop: "{{ requaired_packages }}"
+      
+- name: create dir to store certs
+  ansible.builtin.file:
+    path: "{{ ssl_dir }}"
+    state: "{{ ( state == 'absent') | ternary('absent', 'directory')}}"
+
+- name: Generate an OpenSSL private key
+  openssl_privatekey:
+    path: "{{ ssl_dir }}/{{ server_name }}.key"
+    size: "{{ key_size }}"
+    type: "{{ key_type }}"
+  when: state != 'absent'
+
+- name: Generate an OpenSSL CSR
+  openssl_csr:
+    path: "{{ ssl_dir }}/{{ server_name }}.csr"
+    privatekey_path: "{{ ssl_dir }}/{{ server_name }}.key"
+    country_name: "{{ country_name }}"
+    organization_name: "{{ organization_name }}"
+    email_address: "{{ email_address }}"
+    common_name: "{{ server_name }}"
+  when: state != 'absent'
+
+- name: Generate a Self Signed OpenSSL certificate
+  openssl_certificate:
+    path: "{{ ssl_dir }}/{{ server_name }}.crt"
+    privatekey_path: "{{ ssl_dir }}/{{ server_name }}.key"
+    csr_path: "{{ ssl_dir }}/{{ server_name}}.csr"
+    provider: selfsigned
+  when: state != 'absent'

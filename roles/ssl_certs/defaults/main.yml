@@ -1,0 +1,11 @@
+state: present
+server_name: example.com
+key_size: 4096
+key_type: RSA # Others include DSA, ECC, Ed25519, Ed448, X25519, X448
+country_name: CR
+email_address: admin@example.com
+organization_name: example
+ssl_dir: /opt/ssl
+pip: python3-pip
+requaired_packages:
+  - cryptography

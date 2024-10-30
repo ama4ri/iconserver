@@ -1,0 +1,16 @@
+- name: Add docker repository
+  ansible.builtin.yum_repository:
+    name: docker-ce
+    description: docker repository for Redhat family $releasever
+    enabled: true
+    state: "{{ state }}"
+    gpgcheck: false
+    baseurl: "https://download.docker.com/linux/{{ (ansible_facts['distribution']|lower == 'redhat') | ternary('rhel', ansible_facts['distribution']) }}/$releasever/$basearch/stable"
+
+- name: Install/Delete requaired packages
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: "{{ state }}"
+  loop: "{{ packages_list }}"
+  when:
+    - ansible_facts['os_family']|lower == 'redhat'

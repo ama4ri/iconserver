@@ -1,0 +1,26 @@
+ansible_python_interpreter: /usr/bin/python3
+ansible_ssh_user: root
+ansible_ssh_pass: password
+state: present
+ssl_dir: /opt/iconserver/ssl
+server_name: iconserver.tech
+key_size: 4096
+key_type: RSA
+country_name: CR
+email_address: admin@iconserver.tech
+organization_name: iconserver
+packages_list:
+  - chrony
+  - docker-ce
+  - docker-ce-cli
+  - docker-compose-plugin
+systemd_services:
+  - chronyd
+  - docker
+nginx_dir: /opt/iconserver/nginx/
+project_dir: /opt/iconserver
+compose_version: 1.29.0
+besticon_tag: v3.20.0
+replicas: 2
+nginx_tag: latest
+  

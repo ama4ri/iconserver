@@ -1,0 +1,23 @@
+- name: Create docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml
+    dest: /opt/iconserver/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0755'
+  when: state != 'absent'
+
+- name: copy env
+  ansible.builtin.copy:
+    src: .env
+    dest: "{{ project_dir }}"
+  when: state != 'absent'
+    
+- name: Create nginx configuration
+  ansible.builtin.template:
+    src: nginx/nginx.conf
+    dest: "{{ nginx_dir }}/nginx.conf"
+    owner: root
+    group: root
+    mode: '0755'
+  when: state != 'absent'

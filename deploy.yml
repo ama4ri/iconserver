@@ -1,0 +1,69 @@
+- hosts: all
+  roles:
+    - ssl_certs
+  tasks:
+    - include_tasks: debian_family.yml
+      when:
+        - ansible_facts['os_family']|lower == 'debian'
+  
+    - include_tasks: redhat_family.yml
+      when:
+        - ansible_facts['os_family']|lower == 'redhat'
+      tags: redhat_test
+
+    - name: Check if compose has already been installed
+      ansible.builtin.shell: which docker-compose
+      register: ifcompose
+      ignore_errors: true
+
+    - name: "Install docker-compose {{ compose_version }}"
+      ansible.builtin.shell: curl "https://github.com/docker/compose/releases/download/{{ compose_version }}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose || exit 1
+      when: 
+        - ifcompose.rc != 0
+        - state != 'absent'
+
+
+    - name: make compose executable
+      ansible.builtin.file:
+        path: /usr/local/bin/docker-compose
+        mode: '0755'
+      when: state != 'absent'
+
+    - name: start services
+      ansible.builtin.systemd_service:
+        state: "{{ ( state == 'absent') | ternary('stopped', 'started')}}"
+        name: "{{ item }}"
+        enabled: "{{ (state == 'absent') | ternary(false, true) }}"
+      loop: "{{ systemd_services }}"
+
+    - name: create project dirs
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: "{{ ( state == 'absent') | ternary('absent', 'directory')}}"
+      loop:
+        - "{{ project_dir }}"
+        - "{{ nginx_dir }}"
+    
+    - include_tasks: config_project.yml
+      when:
+        - state != 'absent'
+
+    - name: Create and start services
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_dir }}"
+        state: "{{ state }}"
+      register: output
+      tags: conf
+      when:
+        - state != 'absent'
+    
+    - name: delete project from server
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      when: state == 'absent'
+      loop:
+        - /usr/local/bin/docker-compose
+        - "{{ project_dir }}"
+        - "/opt/containerd/"
+
