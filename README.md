@@ -20,12 +20,12 @@ If you use ansible >= 2.17:
 !!!!!!!!!!!!!!!!!!!
 ## Preparation to deploy
 
-Your system must have python3 and pip3 packages => 3.8!!!
+Your system must have python3 and pip3 packages!!!
 
 Project has two based group of variables:
 
 ### Envirnment variables for Besticon docker container
-It support all env wich you can find in [official github] (https://github.com/mat/besticon) project for besticon.
+It support all env wich you can find in [official github](https://github.com/mat/besticon) project for besticon.
 And of couse, you can find there all requared information about how besticon works.
 In this project we have .env file in project root directory which contains all these variables
 File .env helps to pass variables to Besticon docker container.
@@ -101,5 +101,5 @@ ansible-playbook -i hosts.ini deploy.yml
 To find out if service work or not you can execute the following command via terminal:
 
 ```
-curl -k 'https://{ you server ip or server_name(from cofnig)server_name(from cofnig)}'
+curl -k 'https://172.30.26.147/allicons.json?url=github.com'  --header 'Host:iconserver.tech'
 ```
